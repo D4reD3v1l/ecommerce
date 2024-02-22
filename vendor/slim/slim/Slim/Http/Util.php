@@ -55,14 +55,15 @@ class Util
      * @return array|string
      */
     public static function stripSlashesIfMagicQuotes($rawData, $overrideStripSlashes = null)
-    {
-        $strip = is_null($overrideStripSlashes) ? get_magic_quotes_gpc() : $overrideStripSlashes;
-        if ($strip) {
-            return self::_stripSlashes($rawData);
-        } else {
-            return $rawData;
-        }
+{
+    $strip = is_null($overrideStripSlashes) ? (bool) ini_get('magic_quotes_gpc') : $overrideStripSlashes;
+    if ($strip) {
+        return self::_stripSlashes($rawData);
+    } else {
+        return $rawData;
     }
+}
+
 
     /**
      * Strip slashes from string or array
@@ -75,103 +76,67 @@ class Util
     }
 
     /**
-     * Encrypt data
-     *
-     * This method will encrypt data using a given key, vector, and cipher.
-     * By default, this will encrypt data using the RIJNDAEL/AES 256 bit cipher. You
-     * may override the default cipher and cipher mode by passing your own desired
-     * cipher and cipher mode as the final key-value array argument.
-     *
-     * @param  string $data     The unencrypted data
-     * @param  string $key      The encryption key
-     * @param  string $iv       The encryption initialization vector
-     * @param  array  $settings Optional key-value array with custom algorithm and mode
-     * @return string
-     */
-    public static function encrypt($data, $key, $iv, $settings = array())
-    {
-        if ($data === '' || !extension_loaded('mcrypt')) {
-            return $data;
-        }
-
-        //Merge settings with defaults
-        $settings = array_merge(array(
-            'algorithm' => MCRYPT_RIJNDAEL_256,
-            'mode' => MCRYPT_MODE_CBC
-        ), $settings);
-
-        //Get module
-        $module = mcrypt_module_open($settings['algorithm'], '', $settings['mode'], '');
-
-        //Validate IV
-        $ivSize = mcrypt_enc_get_iv_size($module);
-        if (strlen($iv) > $ivSize) {
-            $iv = substr($iv, 0, $ivSize);
-        }
-
-        //Validate key
-        $keySize = mcrypt_enc_get_key_size($module);
-        if (strlen($key) > $keySize) {
-            $key = substr($key, 0, $keySize);
-        }
-
-        //Encrypt value
-        mcrypt_generic_init($module, $key, $iv);
-        $res = @mcrypt_generic($module, $data);
-        mcrypt_generic_deinit($module);
-
-        return $res;
+ * Encrypt data
+ *
+ * This method will encrypt data using a given key, vector, and cipher.
+ * By default, this will encrypt data using the RIJNDAEL/AES 256 bit cipher. You
+ * may override the default cipher and cipher mode by passing your own desired
+ * cipher and cipher mode as the final key-value array argument.
+ *
+ * @param  string $data     The unencrypted data
+ * @param  string $key      The encryption key
+ * @param  string $iv       The encryption initialization vector
+ * @param  array  $settings Optional key-value array with custom algorithm and mode
+ * @return string
+ */
+public static function encrypt($data, $key, $iv, $settings = array())
+{
+    if ($data === '' || !extension_loaded('openssl')) {
+        return $data;
     }
 
-    /**
-     * Decrypt data
-     *
-     * This method will decrypt data using a given key, vector, and cipher.
-     * By default, this will decrypt data using the RIJNDAEL/AES 256 bit cipher. You
-     * may override the default cipher and cipher mode by passing your own desired
-     * cipher and cipher mode as the final key-value array argument.
-     *
-     * @param  string $data     The encrypted data
-     * @param  string $key      The encryption key
-     * @param  string $iv       The encryption initialization vector
-     * @param  array  $settings Optional key-value array with custom algorithm and mode
-     * @return string
-     */
-    public static function decrypt($data, $key, $iv, $settings = array())
-    {
-        if ($data === '' || !extension_loaded('mcrypt')) {
-            return $data;
-        }
+    //Merge settings with defaults
+    $settings = array_merge(array(
+        'algorithm' => 'aes-256-cbc'
+    ), $settings);
 
-        //Merge settings with defaults
-        $settings = array_merge(array(
-            'algorithm' => MCRYPT_RIJNDAEL_256,
-            'mode' => MCRYPT_MODE_CBC
-        ), $settings);
+    //Encrypt value
+    $res = openssl_encrypt($data, $settings['algorithm'], $key, OPENSSL_RAW_DATA, $iv);
 
-        //Get module
-        $module = mcrypt_module_open($settings['algorithm'], '', $settings['mode'], '');
+    return $res;
+}
 
-        //Validate IV
-        $ivSize = mcrypt_enc_get_iv_size($module);
-        if (strlen($iv) > $ivSize) {
-            $iv = substr($iv, 0, $ivSize);
-        }
-
-        //Validate key
-        $keySize = mcrypt_enc_get_key_size($module);
-        if (strlen($key) > $keySize) {
-            $key = substr($key, 0, $keySize);
-        }
-
-        //Decrypt value
-        mcrypt_generic_init($module, $key, $iv);
-        $decryptedData = @mdecrypt_generic($module, $data);
-        $res = str_replace("\x0", '', $decryptedData);
-        mcrypt_generic_deinit($module);
-
-        return $res;
+/**
+ * Decrypt data
+ *
+ * This method will decrypt data using a given key, vector, and cipher.
+ * By default, this will decrypt data using the RIJNDAEL/AES 256 bit cipher. You
+ * may override the default cipher and cipher mode by passing your own desired
+ * cipher and cipher mode as the final key-value array argument.
+ *
+ * @param  string $data     The encrypted data
+ * @param  string $key      The encryption key
+ * @param  string $iv       The encryption initialization vector
+ * @param  array  $settings Optional key-value array with custom algorithm and mode
+ * @return string
+ */
+public static function decrypt($data, $key, $iv, $settings = array())
+{
+    if ($data === '' || !extension_loaded('openssl')) {
+        return $data;
     }
+
+    //Merge settings with defaults
+    $settings = array_merge(array(
+        'algorithm' => 'aes-256-cbc'
+    ), $settings);
+
+    //Decrypt value
+    $res = openssl_decrypt($data, $settings['algorithm'], $key, OPENSSL_RAW_DATA, $iv);
+
+    return $res;
+}
+
 
     /**
      * Encode secure cookie value
