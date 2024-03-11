@@ -48,6 +48,9 @@ namespace Slim;
  * @author  Josh Lockhart
  * @since   1.6.0
  */
+
+use Traversable;
+
 class Environment implements \ArrayAccess, \IteratorAggregate
 {
     /**
@@ -228,10 +231,10 @@ class Environment implements \ArrayAccess, \IteratorAggregate
     /**
      * IteratorAggregate
      *
-     * @return \ArrayIterator
+     * @return Traversable
      */
     public function getIterator()
     {
-        return new \ArrayIterator($this->properties);
+        return new ArrayIterator($this->properties);
     }
 }

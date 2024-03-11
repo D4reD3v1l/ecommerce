@@ -19,6 +19,9 @@
             "name": "Brent R. Matzelle"
         }
     ],
+    "require-mail": {
+        "phpmailer/phpmailer": "^6.9.1"
+    },
     "require": {
         "php": ">=5.0.0"
     },
